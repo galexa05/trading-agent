@@ -1,5 +1,5 @@
 .env
-scrips/archive/
+scripts/archive/
 data/
 !__pycache__/
 scripts/__pycache__/
