@@ -1,1 +1,4 @@
 .env
+scrips/archive/
+data/
+!__pycache__/
