@@ -4,6 +4,20 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
+pandas = "==2.2.3"
+numpy = "==2.2.5"
+yfinance = "==0.2.61"
+requests = "==2.32.3"
+beautifulsoup4 = "==4.13.4"
+selenium = "==4.18.1"
+feedparser = "==6.0.11"
+newspaper3k = "==0.2.8"
+tqdm = "==4.66.2"
+lxml-html-clean = "==0.4.2"
+newsapi-python = "==0.2.7"
+nltk = "==3.9.1"
+python-dotenv = "==1.1.0"
+ipykernel = "==6.29.5"
 
 [dev-packages]
 
