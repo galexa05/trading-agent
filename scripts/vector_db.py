@@ -38,6 +38,28 @@ def init_embedding_model(model_name: str = DEFAULT_MODEL) -> Any:
         raise
 
 
+def check_database_exists(persist_directory: str = DEFAULT_DB_PATH) -> bool:
+    """
+    Check if a ChromaDB database exists at the specified location.
+    
+    Args:
+        persist_directory: Directory to check
+        
+    Returns:
+        True if the database exists, False otherwise
+    """
+    if not os.path.exists(persist_directory):
+        return False
+    
+    # Check for characteristic ChromaDB files/directories
+    chroma_files = ["chroma.sqlite3", "index"]
+    for file in chroma_files:
+        if os.path.exists(os.path.join(persist_directory, file)):
+            return True
+    
+    return False
+
+
 def init_vector_db(
     persist_directory: str = DEFAULT_DB_PATH,
     embedding_function: Optional[Any] = None,
@@ -59,8 +81,13 @@ def init_vector_db(
     # Create the persist directory if it doesn't exist
     os.makedirs(persist_directory, exist_ok=True)
     
-    # Initialize the client
-    chroma_client = chromadb.Client(Settings(persist_directory=persist_directory))
+    # Initialize the client with persistence
+    print(f"Initializing ChromaDB with persistence directory: {persist_directory}")
+    # chroma_client = chromadb.Client(Settings(
+    #     persist_directory=persist_directory,
+    #     chroma_db_impl="duckdb+parquet"  # Explicitly set the storage backend
+    # ))
+    chroma_client = chromadb.PersistentClient(path=persist_directory)
     
     # Get or create the embedding function
     if embedding_function is None:
@@ -73,7 +100,9 @@ def init_vector_db(
             embedding_function=embedding_function
         )
         print(f"Loaded existing collection '{collection_name}'")
-    except ValueError:
+    except Exception as e:
+        print(f"Could not load existing collection: {e}")
+        print(f"Creating new collection '{collection_name}'")
         collection = chroma_client.create_collection(
             name=collection_name,
             embedding_function=embedding_function
@@ -140,6 +169,9 @@ def process_article_text(
         'title': article_metadata.get('title', ''),
         'pubDate': article_metadata.get('pubDate', ''),
         'source': article_metadata.get('source_name', ''),
+        'link': article_metadata.get('link', ''),
+        'summary': article_metadata.get('summary', ''),
+        'creator': article_metadata.get('creator', ''),
         'chunk_index': i,
         'total_chunks': len(chunks)
     } for i in range(len(chunks))]
@@ -150,9 +182,11 @@ def process_article_text(
 def load_articles_to_vectordb(
     csv_path: str = DEFAULT_CSV_PATH,
     collection: Optional[Any] = None,
+    chroma_client: Optional[Any] = None,
     text_splitter: Optional[RecursiveCharacterTextSplitter] = None,
     batch_size: int = 100,
-    max_articles: Optional[int] = None
+    max_articles: Optional[int] = None,
+    persist_directory: str = DEFAULT_DB_PATH
 ) -> int:
     """
     Load articles from a CSV file into a vector database.
@@ -160,16 +194,18 @@ def load_articles_to_vectordb(
     Args:
         csv_path: Path to the CSV file containing articles
         collection: ChromaDB collection to load articles into
+        chroma_client: ChromaDB client
         text_splitter: Text splitter to use for chunking
         batch_size: Number of articles to process at once
         max_articles: Maximum number of articles to load (None for all)
+        persist_directory: Directory to persist the database
         
     Returns:
         Number of articles processed
     """
     # Create a new client and collection if not provided
-    if collection is None:
-        _, collection = init_vector_db()
+    if collection is None or chroma_client is None:
+        chroma_client, collection = init_vector_db(persist_directory=persist_directory)
     
     # Create a text splitter if not provided
     if text_splitter is None:
@@ -221,6 +257,10 @@ def load_articles_to_vectordb(
                 documents=all_documents,
                 metadatas=all_metadatas
             )
+            
+            # Explicitly persist after each batch
+            # chroma_client.persist()
+            print(f"Persisted batch to disk at {persist_directory}")
         
         print(f"Processed batch {i//batch_size + 1}, articles: {total_articles}, chunks: {total_chunks}")
     
@@ -231,10 +271,12 @@ def load_articles_to_vectordb(
 def query_vector_db(
     query_text: str,
     collection: Optional[Any] = None,
+    chroma_client: Optional[Any] = None,
     n_results: int = 5,
     where: Optional[Dict[str, Any]] = None,
     include_metadata: bool = True,
-    include_documents: bool = True
+    include_documents: bool = True,
+    persist_directory: str = DEFAULT_DB_PATH
 ) -> Dict[str, Any]:
     """
     Query the vector database.
@@ -242,17 +284,19 @@ def query_vector_db(
     Args:
         query_text: Text to query for
         collection: ChromaDB collection to query
+        chroma_client: ChromaDB client
         n_results: Number of results to return
         where: Metadata filter
         include_metadata: Whether to include metadata in results
         include_documents: Whether to include documents in results
+        persist_directory: Directory where the database is stored
         
     Returns:
         Query results
     """
     # Create a new client and collection if not provided
     if collection is None:
-        _, collection = init_vector_db()
+        chroma_client, collection = init_vector_db(persist_directory=persist_directory)
     
     # Execute the query
     results = collection.query(
@@ -271,7 +315,9 @@ def query_vector_db(
 def get_article_by_id(
     article_id: str,
     collection: Optional[Any] = None,
-    reconstruct_full_text: bool = True
+    chroma_client: Optional[Any] = None,
+    reconstruct_full_text: bool = True,
+    persist_directory: str = DEFAULT_DB_PATH
 ) -> Dict[str, Any]:
     """
     Retrieve an article by its ID.
@@ -279,14 +325,16 @@ def get_article_by_id(
     Args:
         article_id: ID of the article to retrieve
         collection: ChromaDB collection to query
+        chroma_client: ChromaDB client
         reconstruct_full_text: Whether to reconstruct the full article text from chunks
+        persist_directory: Directory where the database is stored
         
     Returns:
         Article data including metadata and text
     """
     # Create a new client and collection if not provided
     if collection is None:
-        _, collection = init_vector_db()
+        chroma_client, collection = init_vector_db(persist_directory=persist_directory)
     
     # Query for chunks belonging to the article
     results = collection.get(
@@ -335,7 +383,9 @@ def delete_collection(
     try:
         chroma_client.delete_collection(collection_name)
         print(f"Deleted collection '{collection_name}'")
-    except ValueError as e:
+        chroma_client.persist()
+        print(f"Changes persisted to disk")
+    except Exception as e:
         print(f"Error deleting collection: {e}")
 
 
