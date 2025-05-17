@@ -71,6 +71,75 @@ class NewsDataCollector:
                 pickle.dump(article_dict, f)
         return article_dict
 
+
+    def fetch_portfolio_articles(
+        self,
+        tickers: List[str],
+        language: str = "en",
+        category: str = "business",
+        max_iterations_per_ticker: int = 10,
+        remove_duplicate: int = 1,
+        save_pickle: bool = True,
+        pickle_name: str = "portfolio_articles.pkl",
+    ) -> Dict[str, Any]:
+        """
+        Fetch articles for multiple stock tickers in a portfolio from NewsData API.
+
+        Args:
+            tickers (List[str]): List of stock ticker symbols (e.g., ["AAPL", "TSLA", "MSFT"]).
+            language (str): Language of the articles.
+            category (str): News category to filter.
+            max_iterations_per_ticker (int): Maximum number of API requests per ticker.
+            remove_duplicate (int): Whether to remove duplicates (1 = True).
+            save_pickle (bool): Whether to save the result as a pickle.
+            pickle_name (str): Name for the saved pickle file.
+
+        Returns:
+            Dict[str, Any]: Combined dictionary of articles for all tickers with ticker information added.
+        """
+        combined_articles = {}
+        
+        for ticker in tickers:
+            print(f"Fetching articles for {ticker}...")
+            
+            # Get articles for this ticker
+            ticker_articles = self.fetch_articles(
+                query=ticker,
+                language=language,
+                category=category,
+                max_iterations=max_iterations_per_ticker,
+                remove_duplicate=remove_duplicate,
+                save_pickle=False  # Don't save individual ticker results
+            )
+            
+            # Add ticker information to each article and add to combined results
+            for article_id, article_data in ticker_articles.items():
+                # Skip if this article was already found for another ticker
+                if article_id in combined_articles:
+                    # If already in combined results, just add this ticker to the tickers list
+                    if 'tickers' in combined_articles[article_id]:
+                        if ticker not in combined_articles[article_id]['tickers']:
+                            combined_articles[article_id]['tickers'].append(ticker)
+                    else:
+                        combined_articles[article_id]['tickers'] = [ticker]
+                    continue
+                
+                # Add this article to combined results with ticker information
+                article_data['tickers'] = [ticker]
+                combined_articles[article_id] = article_data
+        
+        print(f"Found {len(combined_articles)} unique articles for portfolio of {len(tickers)} stocks")
+        
+        # Save combined results if requested
+        if save_pickle and combined_articles:
+            os.makedirs(self.data_dir, exist_ok=True)
+            with open(os.path.join(self.data_dir, pickle_name), 'wb') as f:
+                pickle.dump(combined_articles, f)
+            print(f"Saved portfolio articles to {os.path.join(self.data_dir, pickle_name)}")
+        
+        return combined_articles
+
+
     def enrich_articles_context(
         self,
         article_dict: Dict[str, Any],
