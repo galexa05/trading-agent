@@ -19,6 +19,8 @@ from datetime import datetime, timedelta
 import logging
 from rouge_score import rouge_scorer
 from tqdm import tqdm
+from dotenv import load_dotenv
+load_dotenv()
 
 # Add the parent directory to path to import from scripts
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
@@ -37,6 +39,7 @@ from langchain.llms import OpenAI, HuggingFaceHub
 from langchain.chains import LLMChain
 from langchain.prompts import PromptTemplate
 from langchain.schema import Document
+import numpy as np
 
 class SummarizationAgent:
     """
@@ -185,13 +188,15 @@ Summary:"""
                         "ticker": ticker,
                         "document": doc,
                         "metadata": metadata,
-                        "similarity": 1.0 - results["distances"][i]
+                        "similarity": 1.0 - results["distances"][0][i]
                     }
+                    article_info['document'] = np.unique(article_info['document']).tolist()
+                    print(article_info['document'])
                     all_articles.append(article_info)
         
         # Sort by similarity score (descending)
         all_articles.sort(key=lambda x: x["similarity"], reverse=True)
-        
+        all_articles
         return all_articles
     
     def generate_summaries(self, articles: List[Dict]) -> List[Dict]:
@@ -204,24 +209,26 @@ Summary:"""
         Returns:
             List of articles with summaries added
         """
-        for article in tqdm(articles, desc="Generating summaries"):
-            text = article["document"]
+        for i in tqdm(range(len(articles)), desc="Generating summaries"):
+        # for i, article in enumerate(articles):
+            # text = ' '.join(articles[i]["document"])
+            text_list = articles[i]["document"]
             
             # Generate baseline summary
             if self.baseline_chain:
                 try:
-                    article["baseline_summary"] = self.baseline_chain.run(text)
+                    articles[i]["baseline_summary"] = [self.baseline_chain.invoke(text[:500]) for text in text_list]
                 except Exception as e:
                     logger.error(f"Error generating baseline summary: {str(e)}")
-                    article["baseline_summary"] = "Error generating summary."
+                    articles[i]["baseline_summary"] = "Error generating summary."
             
             # Generate fine-tuned summary
             if self.finetuned_chain:
                 try:
-                    article["finetuned_summary"] = self.finetuned_chain.run(text)
+                    articles[i]["finetuned_summary"] = [self.finetuned_chain.invoke(text[:500]) for text in text_list]
                 except Exception as e:
                     logger.error(f"Error generating fine-tuned summary: {str(e)}")
-                    article["finetuned_summary"] = "Error generating summary."
+                    articles[i]["finetuned_summary"] = "Error generating summary."
             
         return articles
     
