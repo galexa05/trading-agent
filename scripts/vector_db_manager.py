@@ -176,6 +176,18 @@ class VectorDatabaseManager:
         metadatas = results.get("metadatas", [])
         distances = results.get("distances", [])
         
+        # Handle case where documents is a list of lists (multiple queries)
+        if documents and isinstance(documents, list) and documents and isinstance(documents[0], list):
+            documents = documents[0]  # Take first query results
+            
+        # Handle case where metadatas is a list of lists
+        if metadatas and isinstance(metadatas, list) and metadatas and isinstance(metadatas[0], list):
+            metadatas = metadatas[0]  # Take first query results
+            
+        # Handle case where distances is a list of lists
+        if distances and isinstance(distances, list) and distances and isinstance(distances[0], list):
+            distances = distances[0]  # Take first query results
+        
         if not documents:
             print("No results found")
             return
@@ -188,6 +200,7 @@ class VectorDatabaseManager:
             print(f"Source: {metadatas[i].get('source', 'N/A')}")
             print(f"Date: {metadatas[i].get('pubDate', 'N/A')}")
             print(f"Chunk: {metadatas[i].get('chunk_index', 0) + 1} of {metadatas[i].get('total_chunks', 'N/A')}")
+            
             
             if include_summary:
                 print(f"Link: {metadatas[i].get('link', 'N/A')}")
