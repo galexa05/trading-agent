@@ -20,9 +20,9 @@ DEFAULT_MODEL = "all-MiniLM-L6-v2"
 DEFAULT_CHUNK_SIZE = 800
 DEFAULT_CHUNK_OVERLAP = 100
 
-def init_embedding_model(model_name: str = DEFAULT_MODEL) -> Any:
+def get_sentence_transformer_embedding_function(model_name: str = DEFAULT_MODEL) -> Any:
     """
-    Initialize an embedding model.
+    Initialize a sentence transformer embedding function.
     
     Args:
         model_name: Name of the model to use for embeddings (default: all-MiniLM-L6-v2)
@@ -36,6 +36,20 @@ def init_embedding_model(model_name: str = DEFAULT_MODEL) -> Any:
         print(f"Error initializing embedding model: {e}")
         print("Make sure you have installed sentence-transformers: pip install sentence-transformers")
         raise
+
+
+def init_embedding_model(model_name: str = DEFAULT_MODEL) -> Any:
+    """
+    Initialize an embedding model.
+    
+    Args:
+        model_name: Name of the model to use for embeddings (default: all-MiniLM-L6-v2)
+        
+    Returns:
+        An embedding function that can be used with ChromaDB
+    """
+    # For backwards compatibility, calls the new function
+    return get_sentence_transformer_embedding_function(model_name=model_name)
 
 
 def check_database_exists(persist_directory: str = DEFAULT_DB_PATH) -> bool:
@@ -274,6 +288,7 @@ def query_vector_db(
     chroma_client: Optional[Any] = None,
     n_results: int = 5,
     where: Optional[Dict[str, Any]] = None,
+    metadata_filter: Optional[Dict[str, Any]] = None,  # Added this parameter for compatibility
     include_metadata: bool = True,
     include_documents: bool = True,
     persist_directory: str = DEFAULT_DB_PATH
@@ -298,11 +313,14 @@ def query_vector_db(
     if collection is None:
         chroma_client, collection = init_vector_db(persist_directory=persist_directory)
     
+    # Use metadata_filter if provided, otherwise use where
+    filter_condition = metadata_filter if metadata_filter is not None else where
+    
     # Execute the query
     results = collection.query(
         query_texts=[query_text],
         n_results=n_results,
-        where=where,
+        where=filter_condition,  # Use the filter condition here
         include=["metadatas", "documents", "distances"] if include_metadata and include_documents else 
                ["metadatas", "distances"] if include_metadata else
                ["documents", "distances"] if include_documents else
