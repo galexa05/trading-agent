@@ -7,4 +7,3 @@ models/archive/
 jupyter_files/archive/
 data/archive
 models/bart-finetuned-2/model.safetensors
-results/

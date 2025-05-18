@@ -97,7 +97,6 @@ trading-agent/
 ├── scripts/
 │   ├── collect_articles.py     # Script for collecting news articles 
 │   ├── finetune_summarizer.py  # Fine-tuning pipeline for summarization model
-│   ├── news_dashboard.py       # Interactive web dashboard for results
 │   ├── news_summarizer_app.py  # Streamlit app for viewing news and summaries
 │   ├── summarization_agent.py  # Main agent for news summarization
 │   ├── transform_articles.py   # Preprocessing for articles
