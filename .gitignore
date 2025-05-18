@@ -3,3 +3,5 @@ scripts/archive/
 data/
 !__pycache__/
 scripts/__pycache__/
+models/
+.DS_Store

@@ -17,6 +17,7 @@ import numpy as np
 from typing import List, Dict, Any, Optional, Tuple
 import json
 import logging
+import inspect
 from datasets import Dataset, DatasetDict
 from transformers import (
     AutoModelForSeq2SeqLM, 
@@ -32,6 +33,9 @@ from tqdm import tqdm
 # Add the parent directory to path
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 from scripts.vector_db_manager import VectorDatabaseManager
+
+# Import the transformer patch to handle version incompatibilities
+import scripts.trainer_patch  # This monkey patches the Trainer class
 
 # Configure logging
 logging.basicConfig(
@@ -259,11 +263,12 @@ class SummarizerFineTuner:
             num_train_epochs=epochs,
             predict_with_generate=True,
             generation_max_length=self.max_target_length,
-            fp16=torch.cuda.is_available(),  # Use mixed precision if available
+            fp16=torch.cuda.is_available() and torch.__version__.startswith("2."),  # Use mixed precision if available
+            bf16=torch.cuda.is_available() and not torch.__version__.startswith("2."),  # Use bf16 for torch 2.7+
             report_to="none"  # Disable wandb/tensorboard to save resources
         )
         
-        # Initialize trainer
+        # Our monkey patch will handle parameter compatibility automatically
         trainer = Seq2SeqTrainer(
             model=self.model,
             args=training_args,

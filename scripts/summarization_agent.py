@@ -96,7 +96,7 @@ class SummarizationAgent:
                 self.baseline_llm = HuggingFaceHub(
                     repo_id="facebook/bart-large-cnn", 
                     huggingfacehub_api_token=self.huggingface_api_token,
-                    model_kwargs={"temperature": 0.3, "max_length": 150}
+                    model_kwargs={"temperature": 0.3, "max_length": 250}
                 )
                 logger.info("Using HuggingFace BART model as baseline")
                 
@@ -125,9 +125,9 @@ Summary:"""
             # Use a fine-tuned model from HuggingFace
             # This could be your own fine-tuned model or a pre-trained one
             self.finetuned_llm = HuggingFaceHub(
-                repo_id="facebook/bart-large-cnn",  # Replace with your fine-tuned model
+                repo_id = "facebook/bart-large-cnn", #repo_id="giannis-alex-46/bart-finetuned-summary_GA",  # Replace with your fine-tuned model
                 huggingfacehub_api_token=self.huggingface_api_token,
-                model_kwargs={"temperature": 0.3, "max_length": 150}
+                model_kwargs={"temperature": 0.3, "max_length": 250}
             )
             
             # Create the prompt template (same as baseline for now)
@@ -170,7 +170,7 @@ Summary:"""
         
         for ticker in tickers:
             # Create a query to find articles about this ticker
-            query = f"{ticker} financial news stock market"
+            query = f"What are the latest financial news about {ticker} stock market?"
             
             # Search the vector database
             results = self.vector_db.query_database(
