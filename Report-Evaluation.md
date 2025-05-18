@@ -136,4 +136,46 @@ The analysis combines quantitative metrics (ROUGE, BLEU) with qualitative assess
 
 ---
 
+## **8. Example of summarised results**
+
+### **Original Summary:**
+Townsend Asset Management Corp NC ADV lowered its holdings in shares of Apple Inc. (NASDAQ:AAPL – Free Report) by 13.0% in the fourth quarter, according to its most recent 13F filing with the SEC.
+Apple comprises about 3.4% of Townsend Asset Management Corp NC ADV’s portfolio, making the stock its 7th biggest holding.
+Townsend Asset Management Corp NC ADV’s holdings in Apple were worth $9,197,000 at the end of the most recent quarter.
+Apple Stock Down 0.4%AAPL stock opened at $211.45 on Friday.
+In the last three months, insiders have sold 191,507 shares of company stock valued at $42,694,080.
+
+### **Zero-shot Summary:**
+Townsend Asset Management Corp NC ADV lowered its holdings in shares of Apple Inc. (NASDAQ:AAPL) by 13.0% in the fourth quarter. Apple comprises about 3.4% of the company’s portfolio, making the stock its 7th biggest holding. The firm now owns $9,197,000.
+
+### **Few-shot Summary:**
+Apple reported record quarterly revenue of $91.8B, up 9% year-over-year. Services and wearables divisions showed strong growth, offsetting a slight decline in iPhone sales. Tesla exceeded Q4 expectations with $24.3B revenue and record 405,278 vehicle deliveries.
+
+### **Fine-tuned Summary:**
+Townsend Asset Management Corp NC ADV’s holdings in Apple were worth $9,197,000 at the end of the most recent quarter.
+Apple comprises about 3.4% of Townsend Asset Management CORP’S portfolio, making the stock its 7th biggest holding.
+AAPL opened at $211.45 on Friday
+
+
+---
+## **9. Challenges and Solutions**
+
+### **9.1 Data Collection Obstacles**
+- **Limited API Access**:
+  - yfinance library lacked full article text capabilities
+  - Restricted request quotas across financial news APIs
+  - Solution: Leveraged NewsData API's free tier to collect diverse articles across multiple stock portfolios
+
+### **9.2 Text Processing Complexity**
+- **Content Extraction Challenges**:
+  - Implemented newspaper3k library to extract clean text from article URLs
+  - Developed streamlined workflow to process raw article links into usable content
+  - Strategic decision to use newspaper3k's extracted summaries for vector database population
+
+### **9.3 Technical Constraints**
+- **Time and Resource Limitations**:
+  - Prioritized functional implementation over comprehensive text cleaning
+  - Mitigated quality issues (advertisements, promotional content) through targeted extraction
+  - Established foundation for future model refinement beyond project deadline
+
 *Report generated May 18, 2025 | Evaluation period: 16 May 2025 | Data source: Data Collection from NewsData API*
