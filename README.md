@@ -12,6 +12,79 @@ An automated agent that monitors financial news related to a stock portfolio, su
 - **Evaluation Framework**: Compares summarization quality using ROUGE metrics
 - **Interactive Dashboard**: Optional web interface to view and compare summaries
 
+## Important: Large Model Files
+
+This repository uses **Git Large File Storage (LFS)** to manage the fine-tuned model files, which exceed GitHub's standard file size limits:
+
+- The fine-tuned BART model (`models/bart-finetuned-2/model.safetensors`) is approximately 1.55GB
+
+### Cloning This Repository
+
+To properly clone this repository with all model files:
+
+1. **Install Git LFS** if you haven't already:
+   ```bash
+   # macOS
+   brew install git-lfs
+   
+   # Linux
+   sudo apt-get install git-lfs
+   ```
+
+2. **Enable Git LFS** in your system:
+   ```bash
+   git lfs install
+   ```
+
+3. **Clone as usual**:
+   ```bash
+   git clone https://github.com/yourusername/trading-agent.git
+   cd trading-agent
+   git lfs pull  # Ensure all LFS files are downloaded
+   ```
+
+### Using the Fine-tuned Model
+
+⚠️ **IMPORTANT:** The fine-tuned model file has been removed from this repository due to its large size (1.55GB).
+
+To run the app with the fine-tuned model, follow these steps:
+
+1. **Download the model file**:
+   Download the `model.safetensors` file from [this Google Drive link](https://drive.google.com/drive/folders/1pZDg1sR0MzzCOYurSfajXND5qzfL0S0G?usp=sharing).
+
+2. **Place the file in the correct location**:
+   After cloning the repository, create the directory structure if it doesn't exist and place the downloaded file:
+   ```bash
+   # Create directory if needed
+   mkdir -p models/bart-finetuned-2
+   
+   # Move the downloaded file to this location
+   mv /path/to/downloaded/model.safetensors models/bart-finetuned-2/
+   ```
+
+3. **Verify the model file**:
+   ```bash
+   # Check that the model file is in place
+   ls -la models/bart-finetuned-2/
+   ```
+   You should see `model.safetensors` (approximately 1.55GB in size).
+
+4. **Run the application**:
+
+   **Option A: Run locally with Streamlit**:
+   ```bash
+   # Start the app using Streamlit
+   pipenv run streamlit run scripts/news_summarizer_app.py
+   ```
+   
+   **Option B: Use Docker deployment**:
+   ```bash
+   # Use the Docker setup which handles everything automatically
+   ./run_app.sh
+   ```
+
+**Note**: If you don't download the fine-tuned model, the application will still work but will fall back to using only the baseline models (zero-shot and few-shot approaches).
+
 ## Project Structure
 
 ```
@@ -133,12 +206,6 @@ python -m scripts.finetune_summarizer --base-model facebook/bart-large-cnn --epo
 
 ```bash
 python -m scripts.summarization_agent --portfolio AAPL,TSLA,MSFT --days-back 7 --output ./data/summaries.json
-```
-
-#### 5. Launch Dashboard (Optional)
-
-```bash
-python -m scripts.news_dashboard --results ./data/summaries.json
 ```
 
 ## Evaluation
