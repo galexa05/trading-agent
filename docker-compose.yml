@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  trading-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: trading-agent
+    ports:
+      - "8501:8501"
+    volumes:
+      # Mount these directories to persist data and models
+      - ./data/chroma_db:/app/data/chroma_db
+      - ./data/raw_articles:/app/data/raw_articles
+      - ./models/bart-finetuned-2:/app/models/bart-finetuned-2
+    env_file:
+      - .env
+    environment:
+      - PYTHONUNBUFFERED=1
+      # You can override any environment variables here
+      # - NEWS_DATA_API=your_api_key_here
+      # - HUGGINGFACE_TOKEN=your_huggingface_token_here
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
