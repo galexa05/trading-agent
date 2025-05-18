@@ -18,50 +18,98 @@ An automated agent that monitors financial news related to a stock portfolio, su
 trading-agent/
 ├── data/
 │   ├── articles.csv            # Collected financial news articles
+│   ├── raw_articles/           # Raw article data for vector DB initialization
 │   ├── chroma_db/              # Vector database storage
 │   └── summaries.json          # Generated summaries and evaluations
 ├── scripts/
-│   ├── vector_db.py            # Vector database operations
-│   ├── vector_db_manager.py    # Interface for vector DB management
-│   ├── summarization_agent.py  # Main agent for news summarization
+│   ├── collect_articles.py     # Script for collecting news articles 
 │   ├── finetune_summarizer.py  # Fine-tuning pipeline for summarization model
-│   └── news_dashboard.py       # Interactive web dashboard for results
+│   ├── news_dashboard.py       # Interactive web dashboard for results
+│   ├── news_summarizer_app.py  # Streamlit app for viewing news and summaries
+│   ├── summarization_agent.py  # Main agent for news summarization
+│   ├── transform_articles.py   # Preprocessing for articles
+│   ├── vector_db.py            # Vector database operations
+│   └── vector_db_manager.py    # Interface for vector DB management
 ├── models/
-│   └── finetuned_summarizer/   # Fine-tuned model storage
+│   └── bart-finetuned-2/       # Fine-tuned BART model storage
 ├── jupyter_files/
+│   ├── create_notebook.py      # Script to create Jupyter notebooks
+│   ├── model_evaluation.py     # Evaluation metrics for summarization models
 │   └── vector_db_walkthrough.ipynb  # Notebook for vector DB exploration
-├── Pipfile                     # Dependencies
-└── README.md                   # Project documentation
+├── Dockerfile                  # Docker configuration for containerization
+├── docker-compose.yml          # Docker Compose configuration
+├── entrypoint.sh              # Container entrypoint script
+├── run_app.sh                 # Script to build and run the Docker container
+├── Pipfile                    # Python dependencies
+├── .env                       # Environment variables (API keys, etc.)
+└── README.md                  # Project documentation
 ```
 
 ## Getting Started
 
+You can run this application either locally or using Docker.
+
 ### Prerequisites
 
-- Python 3.8+
+#### For Local Development
+- Python 3.12+
 - pip or pipenv for dependency management
 - (Optional) GPU for faster model fine-tuning
+
+#### For Docker Deployment
+- Docker and docker-compose installed
+- No other dependencies needed - everything runs in the container!
 
 ### Installation
 
 1. Clone this repository
-   ```
+   ```bash
    git clone https://github.com/yourusername/trading-agent.git
    cd trading-agent
    ```
 
-2. Install dependencies
-   ```
-   pip install -r requirements.txt
-   ```
-   
-   Or using pipenv:
-   ```
+2. Install dependencies (local development only)
+   ```bash
    pipenv install
    pipenv shell
    ```
 
-### Usage
+### Docker Deployment
+
+This project can be easily deployed using Docker, which handles all dependencies, the vector database, and model requirements automatically.
+
+1. Make sure Docker and docker-compose are installed on your system
+
+2. Run the deployment script
+   ```bash
+   ./run_app.sh
+   ```
+
+3. Access the application at http://localhost:8501
+
+The deployment script will:
+- Check for required components (vector database, fine-tuned model)
+- Create a template .env file if one doesn't exist
+- Build and start the Docker container
+- Mount volumes for persistent data storage
+
+#### Environment Variables
+
+Before running, you may want to set up your API keys in the `.env` file:
+
+```bash
+# Trading Agent Environment Variables
+NEWS_DATA_API=your_api_key_here  # For article collection
+HUGGINGFACE_TOKEN=your_huggingface_token_here  # For model fine-tuning
+```
+
+#### Docker Management Commands
+
+- **View logs**: `docker-compose logs -f`
+- **Stop the app**: `docker-compose down`
+- **Restart the app**: `docker-compose restart`
+
+### Local Usage
 
 #### 1. Initialize Vector Database
 
@@ -120,6 +168,38 @@ The project evaluates summarization quality using:
 - Modular LLMChain design for summarization
 - Prompt templating for consistent outputs
 - Support for multiple LLM backends (OpenAI, HuggingFace, etc.)
+
+## Running the Streamlit News Summarizer App
+
+### Docker (Recommended)
+
+The easiest way to run the News Summarizer app is through Docker:
+
+```bash
+# One command setup and launch
+./run_app.sh
+```
+
+This handles all dependencies, data management, and server setup automatically. The web interface will be available at http://localhost:8501.
+
+### Local Development
+
+If you prefer to run the app locally:
+
+```bash
+# First, activate your pipenv environment
+pipenv shell
+
+# Then run the streamlit app
+python -m streamlit run scripts/news_summarizer_app.py
+```
+
+### Features of the News Summarizer App
+
+- **Stock Selection**: Choose from available stocks in your portfolio
+- **Multiple Models**: Generate summaries using baseline, fine-tuned, or both models
+- **Side-by-Side Comparison**: Compare original vs. generated summaries
+- **Interactive UI**: Modern, user-friendly interface for browsing financial articles
 
 ## License
 
