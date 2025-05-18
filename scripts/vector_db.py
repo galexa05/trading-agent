@@ -200,7 +200,8 @@ def load_articles_to_vectordb(
     text_splitter: Optional[RecursiveCharacterTextSplitter] = None,
     batch_size: int = 100,
     max_articles: Optional[int] = None,
-    persist_directory: str = DEFAULT_DB_PATH
+    persist_directory: str = DEFAULT_DB_PATH,
+    text_column: str = 'text'
 ) -> int:
     """
     Load articles from a CSV file into a vector database.
@@ -213,6 +214,7 @@ def load_articles_to_vectordb(
         batch_size: Number of articles to process at once
         max_articles: Maximum number of articles to load (None for all)
         persist_directory: Directory to persist the database
+        text_column: Column name in the CSV file to use for text splitting (default: 'text')
         
     Returns:
         Number of articles processed
@@ -246,13 +248,13 @@ def load_articles_to_vectordb(
         for _, row in batch.iterrows():
             article_metadata = row.to_dict()
             
-            # Skip if text is missing
-            if 'text' not in article_metadata or pd.isna(article_metadata['text']) or article_metadata['text'] == "":
+            # Skip if specified text column is missing
+            if text_column not in article_metadata or pd.isna(article_metadata[text_column]) or article_metadata[text_column] == "":
                 continue
                 
             # Process the article text
             chunk_ids, chunks, metadatas = process_article_text(
-                article_metadata['text'], 
+                article_metadata[text_column], 
                 article_metadata,
                 text_splitter
             )
