@@ -24,8 +24,7 @@ The analysis combines quantitative metrics (ROUGE, BLEU) with qualitative assess
   - **Hallucination Rate**: Frequency of unsupported claims  
 
 ### **2.2 Data**
-- Tested on financial news articles from specialized datasets  
-- Reference summaries created by domain experts  
+- Tested on financial news articles collected from [NewsData API](https://newsdata.io/) 
 
 ---
 
@@ -62,7 +61,7 @@ The analysis combines quantitative metrics (ROUGE, BLEU) with qualitative assess
 | Fine-tuned  | 0.84             | 0.09               |
 
 ![Figure 2: Factual Accuracy vs. Hallucination Rate](results/evaluation_plots/image-2.png)
-*Figure 2: Scatter plot showing the trade-off between factual accuracy and hallucination rate*
+*Figure 2: Bar chart showing the trade-off between factual accuracy and hallucination rate*
 
 **Pattern Analysis**  
 - **Zero-shot**:  
